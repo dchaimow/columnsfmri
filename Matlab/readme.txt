@@ -1,0 +1,1 @@
+inside MATLAB type help columnsfmri or see Contents.m
