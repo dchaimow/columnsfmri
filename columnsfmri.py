@@ -1,11 +1,12 @@
 import numpy as np
-from scipy.stats import norm
+from scipy.stats import norm, chi2, gamma
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def meanpower(s):
     return np.mean(np.abs(s**2))
 
-def noiseModel(V,TR,nT,diffFlag,*args,**kwargs):
+def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
     TR0 = 5.4
     
     noiseType = kwargs.get('noiseType', None)
@@ -35,8 +36,40 @@ def noiseModel(V,TR,nT,diffFlag,*args,**kwargs):
         k = np.Inf; # TEST THIS!
         l = 0.0113;
         T1 = 1.939;
-        
     
+    if not(differentialFlag) and nT != 1:
+        raise ValueError('for multiple measurements only differential implemented!')
+    elif nT == 1:
+        F = np.sqrt(np.tanh(TR/(2*T1))/np.tanh(TR0/(2*T1)))
+        k = k * F
+        sigma = np.sqrt(1+l**2*k**2*V**2)/(k*V)
+        return sigma
+    
+    s = 0
+    assert(nT%2==0)
+    for t1 in range(1,int(nT/2)+1):
+        for t2 in range(1,int(nT/2)+1):
+            s = s + np.exp((-TR*abs(t1-t2))/15)
+    
+    F = np.sqrt(np.tanh(TR/(2*T1))/np.tanh(TR0/(2*T1)))
+    k = k * F
+    sigma = np.sqrt((4/(k**2*V**2*nT)) + ((2*l**2)/(nT/2)**2)*s)
+    return sigma
+
+def detectionProbability(cnr,N):
+    if np.size(cnr)>1:
+        p = np.zeros(shape(cnr))
+        if np.size(N)==1:
+            N = np.ones(shape(cnr)) * N
+        for z in range(size(cnr)):
+            p[z] = detectionProbability(cnr[z],N[z])
+    else:
+        alpha = 0.05
+        x_crit = chi2.ppf(1-alpha, df=N)
+        a = N/2
+        b = 2*(1+cnr**2)
+        p = 1-gamma.cdf(x_crit,a,scale=b)
+    return s
 
 class sim:
     def __init__(self,N,L):
@@ -85,7 +118,7 @@ class sim:
         if fwhm==0:
             by = beta * y
             psf = None
-            MTF = np.ones(np.size(y))
+            MTF = np.ones(np.shape(y))
         else:
             fwhmfactor = 2*np.sqrt(2*np.log(2))
             psf = beta * \
@@ -108,6 +141,9 @@ class sim:
         else:
             my = None
         return my
+    
+    def patternCorrelation(self,orig,mri):
+        # CONTINUE HERE!!!
         
     def plotPattern(self,y):
         fig, ax = plt.subplots()
