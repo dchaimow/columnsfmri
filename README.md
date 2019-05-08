@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dchaimow/columnsfmri/master)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dchaimow/columnsfmri/master?filepath=columnsfmri.ipynb)
 # columnsfmri
 simulation of fMRI of cortical column patterns
 
