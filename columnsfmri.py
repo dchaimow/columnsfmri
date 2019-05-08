@@ -144,6 +144,7 @@ class sim:
     
     def patternCorrelation(self,orig,mri):
         # CONTINUE HERE!!!
+        return
         
     def plotPattern(self,y):
         fig, ax = plt.subplots()
