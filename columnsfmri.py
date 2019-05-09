@@ -108,7 +108,7 @@ class sim:
             FORIENTNotNormalized = \
             norm.pdf(r,loc= rho,scale=(rho*deltaRelative)/fwhmfactor) + \
             norm.pdf(r,loc=-rho,scale=(rho*deltaRelative)/fwhmfactor)
-        C = (np.sqrt(meanpower(FORIENTNotNormalized)))*np.sqrt(np.spi/8)
+        C = (np.sqrt(meanpower(FORIENTNotNormalized)))*np.sqrt(np.pi/8)
         FORIENT = FORIENTNotNormalized/C
         noiseF = self.ft2(gwnoise)
         neuronal = np.real(self.ift2(FORIENT*noiseF))
