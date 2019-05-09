@@ -69,7 +69,7 @@ def detectionProbability(cnr,N):
         a = N/2
         b = 2*(1+cnr**2)
         p = 1-gamma.cdf(x_crit,a,scale=b)
-    return s
+    return p
 
 class sim:
     def __init__(self,N,L):
@@ -108,10 +108,10 @@ class sim:
             FORIENTNotNormalized = \
             norm.pdf(r,loc= rho,scale=(rho*deltaRelative)/fwhmfactor) + \
             norm.pdf(r,loc=-rho,scale=(rho*deltaRelative)/fwhmfactor)
-        C = (np.sqrt(meanpower(FORIENTNotNormalized)))*np.sqrt(np.pi/8)
+        C = (np.sqrt(meanpower(FORIENTNotNormalized)))*np.sqrt(np.spi/8)
         FORIENT = FORIENTNotNormalized/C
         noiseF = self.ft2(gwnoise)
-        neuronal = self.ift2(FORIENT*noiseF)
+        neuronal = np.real(self.ift2(FORIENT*noiseF))
         return neuronal
     
     def bold(self,fwhm,beta,y):
@@ -142,13 +142,34 @@ class sim:
             my = None
         return my
     
+    def upsample(self,y):
+        Fy = np.fft.fft2(y)
+        nx, ny = Fy.shape # size of original matrix
+        nxAdd = self.N - nx # number of zeros to add
+        nyAdd = self.N - ny
+        # quadrants of the FFT, starting in the upper left
+        q1 = Fy[:int(nx/2),:int(ny/2)]
+        q2 = Fy[:int(nx/2),int(ny/2):]
+        q3 = Fy[int(nx/2):,int(ny/2):]
+        q4 = Fy[int(nx/2):,:int(ny/2)]
+        zeroPaddRows = np.zeros((nxAdd,int(ny/2)))
+        zeroPaddColumns = np.zeros((nxAdd+nx,nyAdd))
+        zeroPaddFy = np.hstack(
+            (np.vstack((q1,zeroPaddRows,q4)),
+             zeroPaddColumns,
+             np.vstack((q2,zeroPaddRows,q3))))
+        upPattern = np.real(np.fft.ifft2(zeroPaddFy)) * self.N**2/(nx*ny)
+        return upPattern
+    
     def patternCorrelation(self,orig,mri):
-        # CONTINUE HERE!!!
-        return
+        mriUp = self.upsample(mri)
+        c = np.corrcoef(orig.flatten(),mriUp.flatten())
+        r = c[0,1]
+        return r
         
     def plotPattern(self,y):
         fig, ax = plt.subplots()
-        im = ax.imshow(np.real(y),
+        im = ax.imshow(np.real(y),'gray',
                        extent=[min(self.x),max(self.x),min(self.x),max(self.x)],
                        interpolation='bilinear')
         fig.colorbar(im, ax=ax)
@@ -156,7 +177,7 @@ class sim:
     
     def plotVoxels(self,y):
         fig, ax = plt.subplots()
-        im = ax.imshow(np.real(y),
+        im = ax.imshow(np.real(y),'gray',
                        extent=[min(self.x),max(self.x),min(self.x),max(self.x)],
                        interpolation='none')
         fig.colorbar(im, ax=ax)
