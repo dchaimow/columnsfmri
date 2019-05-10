@@ -126,7 +126,7 @@ class sim:
             norm.pdf(self.x2,loc=0,scale=fwhm/fwhmfactor)
             MTF = beta * np.exp(-(self.k1**2+self.k2**2) * 
                                 2*(fwhm/fwhmfactor)**2*np.pi**2);
-            by = self.ift2(MTF*self.ft2(y))
+            by = np.real(self.ift2(MTF*self.ft2(y)))
         return by,psf,MTF
     
     def mri(self,w,y):
@@ -169,16 +169,40 @@ class sim:
         
     def plotPattern(self,y):
         fig, ax = plt.subplots()
-        im = ax.imshow(np.real(y),'gray',
-                       extent=[min(self.x),max(self.x),min(self.x),max(self.x)],
+        minx = min(self.x)
+        maxx = max(self.x)
+        im = ax.imshow(y,'gray',
+                       extent=[minx,maxx,minx,maxx],
                        interpolation='bilinear')
         fig.colorbar(im, ax=ax)
         plt.show()
     
     def plotVoxels(self,y):
         fig, ax = plt.subplots()
-        im = ax.imshow(np.real(y),'gray',
-                       extent=[min(self.x),max(self.x),min(self.x),max(self.x)],
+        minx = min(self.x)
+        maxx = max(self.x)
+        im = ax.imshow(y,'gray',
+                       extent=[minx,maxx,minx,maxx],
                        interpolation='none')
         fig.colorbar(im, ax=ax)
         plt.show()
+    
+    def plotColumnsBoldMRI(self,columns,bold,mri):
+        fig = plt.figure()
+        ax1 = fig.add_subplot(1,3,1)
+        ax2 = fig.add_subplot(1,3,2)
+        ax3 = fig.add_subplot(1,3,3)
+        minx = min(self.x)
+        maxx = max(self.x)
+        extent = [minx,maxx,minx,maxx]
+        im1 = ax1.imshow(columns,'gray',
+                       extent=extent,
+                       interpolation='bilinear')
+        im2 = ax2.imshow(bold,'gray',
+                       extent=extent,
+                       interpolation='bilinear')
+        im3 = ax3.imshow(mri,'gray',
+                       extent=extent,
+                       interpolation='none')
+        plt.show()
+    
