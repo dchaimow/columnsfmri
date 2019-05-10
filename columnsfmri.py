@@ -3,6 +3,174 @@ from scipy.stats import norm, chi2, gamma
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def simulatefMRIOfColumnPatterns(parameters):
+    # set parameters
+    nTrials        = parameters['nTrials']
+    Nsim           = parameters['N']
+    L              = parameters['L']
+    rho            = parameters['rho']
+    deltaRelative  = parameters['deltaRelative']
+    fwhm           = parameters['fwhm']
+    beta           = parameters['beta']
+    wRange         = parameters['wRange']
+    sliceThickness = parameters['sliceThickness']
+    TR             = parameters['TR']
+    nT             = parameters['nT']
+    noiseType      = parameters['noiseType']
+    AFlat          = parameters['AFlat']
+    
+    nWRange = len(wRange)
+    
+    # setup simulation
+    sim = simulation(Nsim,L);
+
+    # voxel volume as a function of voxel width
+    voxelVOfW = sliceThickness*wRange**2;
+
+    # number of voxels as a function of voxel width (assuming single slice)
+    nVoxelsOfW = AFlat/(wRange**2);
+
+    # noise level as a function of voxel volume
+    differentialFlag = True;
+    noiseOfW = noiseModel(voxelVOfW,TR,nT,differentialFlag,noiseType=noiseType);
+    
+    # initialize contrast range and pattern correlation result arrays
+    cr = np.zeros((nTrials,nWRange));
+    cor = np.zeros((nTrials,nWRange));
+                   
+    for zTrial in range(nTrials):
+        np.random.seed(parameters['randomNumberSeed']+zTrial)
+    
+        # initialize noise pattern for simulation of columns
+        gwn = sim.gwnoise()
+        # simulate column pattern
+        columnPattern =  sim.columnPattern(rho,deltaRelative,gwn) 
+        # simulate BOLD response pattern
+        boldPattern,_,_ = sim.bold(fwhm,beta,columnPattern);
+    
+        # for each tested voxel width
+        for zW in range(nWRange):
+            w = wRange[zW];
+            # simulate MRI voxel sampling
+            mriPattern = sim.mri(w,1+boldPattern)
+            # calculate contrast range
+            cr[zTrial,zW] = np.std(mriPattern);
+            # add noise
+            mriPlusNoisePattern = mriPattern + noiseOfW[zW] * np.random.randn(*mriPattern.shape);
+            # calculate correlation to original (neuronal) pattern        
+            cor[zTrial,zW] =  sim.patternCorrelation(columnPattern,mriPlusNoisePattern);
+    
+    # average over trials
+    # cr = np.mean(cr,axis=0);
+    # cor = mean(cor,axis=0);
+    
+    # calculate CNR and mv-CNR
+    # cnr = cr/noiseOfW;
+    return cr,noiseOfW
+    
+def setParameters(*args):
+    """
+    Sets parameters for simulatefMRIOfColumnPatterns.
+    
+    parameters = setParameters() returns default parameters.
+
+    parameters = setParameters(s1,...) sets parameters according to
+    predefined scenarios.
+    s1,... are strings that select one of multiple scanner/pulse
+    sequence and/or pattern irregularity scenarios:
+    '3TGE','7TGE','7TSE','regular','irregular 
+ 
+    parameters is a dictionary consisting of the following entries:
+ 
+    randomNumberSeed    random number seed
+ 
+    nTrials             number of simulation trials
+    N                   simulation grid points along one dimension
+    L                   simulation size along one dimension [mm]
+    wRange              list of MRI voxel widths
+                        (need to be divisors of L)                          
+    rho                 main pattern frequency 
+                        (~1/(2*column spacing) [1/mm]
+    deltaRelative       (relative) irregularity (= bandpass FWHM/rho)
+ 
+    fwhm                BOLD PSF FWHM [mm]
+    beta                BOLD PSF amplitude [relative signal ch.]
+ 
+    sliceThickness      slice thickness [mm]
+    AFlat               FOV area, determines number of voxels [mm^2]
+    TR                  TR (repetition time)
+    nT                  number of volumes (measurements), 
+                        (nT/2 per one of two conditions)
+    noiseType           noise type, either '3T' or '7T',
+                        can either be a numeric vector
+                        [k, l, T1] consisting of noise model
+                        parameters kappa and lambda 
+                        (see Triantafyllou et al. 2005) and
+                        longitudinal relaxation time T1
+ 
+    see also simulatefMRIOfColumnPatterns
+    """
+    parameters = dict()
+    
+    # seed for random number generator
+    parameters['randomNumberSeed'] = 23 
+
+    # simulation parameters
+    parameters['nTrials'] = 32  # number of simulation trials
+    parameters['N'] = 512  # simulation grid points
+    parameters['L'] = 24  # mm, for simulation/calc. of contrast range
+
+    # range of voxel widths
+    parameters['wRange'] = parameters['L']/(2*np.hstack((np.arange(3,29),[30,32,34,37,40,44,53,60,69,80,96,120,160,240])))
+    
+    # pattern parameters
+    parameters['rho'] = 1/1.6  # main pattern frequency = 1/(2*column spacing)
+    parameters['deltaRelative'] = 0.5  # (moderate) irregularity (bandpass FWHM/rho)
+
+    # PSF parameters
+    parameters['fwhm'] = 1.02   # PSF FWHM in mm
+    parameters['beta'] = 0.035  # amplitute
+
+    # further MRI parameters affecting SNR calculation
+    parameters['sliceThickness'] = 2.5  # mm
+    parameters['AFlat'] = 87  # mm^2 area for calculating nVoxels (from odc rois)
+    parameters['TR'] = 2  # s
+    parameters['nT'] = 1000  # number of volumes (sum of both conditions)
+    parameters['noiseType'] = '7T'  # alternatively: '3T'
+
+    if '3TGE' in args:
+        assert not('7TGE' in args) and not('7TSE' in args),\
+        'Only one field strength/pulse sequence scenario allowed!'
+        parameters['fwhm'] = 2.8  # PSF FWHM in mm
+        parameters['beta'] = 0.03 # amplitute
+        parameters['noiseType'] = '3T' # alternatively: '3T'
+
+    if '7TGE' in args:
+        assert not('3TGE' in args) and not('7TSE' in args),\
+        'Only one field strength/pulse sequence scenario allowed!'      
+        parameters['fwhm'] = 1.02   # PSF FWHM in mm
+        parameters['beta'] = 0.035  # amplitute
+        parameters['noiseType'] = '7T'  # alternatively: '3T'
+
+    if '7TSE' in args:
+        assert not('3TGE' in args) and not('7TGE' in args),\
+        'Only one field strength/pulse sequence scenario allowed!'
+        parameters['fwhm'] = 0.82   # PSF FWHM in mm
+        parameters['beta'] = 0.025  # amplitute
+        parameters['noiseType'] = '7T'  # alternatively: '3T'
+
+    if 'irregular' in args:
+        assert not('regular' in args),\
+        'Only one regularity scenario allowed!'        
+        parameters['deltaRelative'] = 1 
+
+    if 'regular' in args:
+        assert not('irregular' in args),\
+        'Only one regularity scenario allowed!'        
+        parameters['deltaRelative'] = 0 
+        
+    return parameters
+
 def meanpower(s):
     return np.mean(np.abs(s**2))
 
@@ -21,21 +189,21 @@ def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
         if l != None or k != None or T1 != None:
             raise ValueError('specify either noiseType or (k,l and T1), not both!')
     if noiseType == '3T':
-        k = 6.6567;
-        l = 0.0129;
-        T1 = 1.607;
+        k = 6.6567 
+        l = 0.0129 
+        T1 = 1.607 
     if noiseType =='7T':
-        k = 9.9632;
-        l = 0.0113;
-        T1 = 1.939;
+        k = 9.9632 
+        l = 0.0113 
+        T1 = 1.939 
     if noiseType =='Thermal':
-        k = 9.9632;
-        l = 0;
-        T1 = 1.939;
+        k = 9.9632 
+        l = 0 
+        T1 = 1.939 
     if noiseType == 'Physiological':
-        k = np.Inf; # TEST THIS!
-        l = 0.0113;
-        T1 = 1.939;
+        k = np.Inf  # TEST THIS!
+        l = 0.0113 
+        T1 = 1.939 
     
     if not(differentialFlag) and nT != 1:
         raise ValueError('for multiple measurements only differential implemented!')
@@ -46,7 +214,7 @@ def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
         return sigma
     
     s = 0
-    assert(nT%2==0)
+    assert nT%2==0 
     for t1 in range(1,int(nT/2)+1):
         for t2 in range(1,int(nT/2)+1):
             s = s + np.exp((-TR*abs(t1-t2))/15)
@@ -71,7 +239,7 @@ def detectionProbability(cnr,N):
         p = 1-gamma.cdf(x_crit,a,scale=b)
     return p
 
-class sim:
+class simulation:
     def __init__(self,N,L):
         self.N = N
         self.L = L
@@ -125,7 +293,7 @@ class sim:
             norm.pdf(self.x1,loc=0,scale=fwhm/fwhmfactor) * \
             norm.pdf(self.x2,loc=0,scale=fwhm/fwhmfactor)
             MTF = beta * np.exp(-(self.k1**2+self.k2**2) * 
-                                2*(fwhm/fwhmfactor)**2*np.pi**2);
+                                2*(fwhm/fwhmfactor)**2*np.pi**2) 
             by = np.real(self.ift2(MTF*self.ft2(y)))
         return by,psf,MTF
     
