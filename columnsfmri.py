@@ -3,6 +3,40 @@ from scipy.stats import norm, chi2, gamma, weibull_min
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def displayFigureA(results):
+    """
+    figure A - optimization of all 3 objectives
+    """
+    fig,(ax1,ax2,ax3) = plt.subplots(1,3,sharex='col',figsize=(10,3))
+    fig.subplots_adjust(wspace=0.3)
+    
+    ax1.plot(results['w'],results['pDetectUnivariate'],'C0')
+    ax1.plot([results['pDetectUnivariate_optW'],results['pDetectUnivariate_optW']],
+             [0, 1],'C0--',)
+    ax1.axis([min(results['w']),max(results['w']),0,1])
+    ax1.set_xlabel('voxel width [mm]')
+    ax1.set_ylabel('probability')
+    ax1.set_title('Univariate detection')
+        
+    ax2.plot(results['w'],results['accuracyDecode2'],'C1')
+    ax2.plot([results['accuracyDecode2_optW'],results['accuracyDecode2_optW']],
+             [0.5, 1],'C1--',)
+    ax2.axis([min(results['w']),max(results['w']),0.5,1])
+    ax2.set_xlabel('voxel width [mm]')
+    ax2.set_ylabel('accuracy')
+    ax2.set_title('Multivariate decoding')
+    
+    ax3.plot(results['w'],results['patternCorrelation'],'C2')
+    ax3.plot([results['patternCorrelation_optW'],results['patternCorrelation_optW']],
+             [0, 1],'C2--',)
+    ax3.axis([min(results['w']),max(results['w']),0,1])   
+    ax3.set_xlabel('voxel width [mm]')
+    ax3.set_ylabel('correlation')
+    ax3.set_title('Reconstruction')
+
+    plt.show()
+    
+
 def printResults(results):
     print('optimized quantity                 | optimal value | optimal voxel width')
     print('-----------------------------------+---------------+--------------------')

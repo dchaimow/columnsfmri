@@ -35,3 +35,7 @@ plt.fill_between(wRange, cnrErrorMinus, cnrErrorPlus,alpha=0.5)
 plt.xlabel('voxel width [mm]')
 plt.ylabel('CNR')
 plt.show()
+
+
+import importlib
+importlib.reload(my_module)
