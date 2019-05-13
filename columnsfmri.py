@@ -82,7 +82,7 @@ def simulatefMRIOfColumnPatterns(parameters):
             # calculate contrast range
             cr[zTrial,zW] = np.std(mriPattern);
             # add noise
-            mriPlusNoisePattern = mriPattern + noiseOfW[zW] * np.random.randn(*mriPattern.shape);
+            mriPlusNoisePattern = mriPattern + noiseOfW[zW] * np.random.randn(*mriPattern.shape)
             # calculate correlation to original (neuronal) pattern        
             cor[zTrial,zW] = sim.patternCorrelation(columnPattern,mriPlusNoisePattern);
     
