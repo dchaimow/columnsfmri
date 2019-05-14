@@ -39,3 +39,41 @@ plt.show()
 
 import importlib
 importlib.reload(my_module)
+
+    def plotColumnsBoldMRI(self,columns,bold,mri):
+        fig = plt.figure()
+        ax1 = fig.add_subplot(1,3,1)
+        ax2 = fig.add_subplot(1,3,2)
+        ax3 = fig.add_subplot(1,3,3)
+        minx = min(self.x)
+        maxx = max(self.x)
+        extent = [minx,maxx,minx,maxx]
+        im1 = ax1.imshow(columns,'gray',
+                       extent=extent,
+                       interpolation='bilinear')
+        im2 = ax2.imshow(bold,'gray',
+                       extent=extent,
+                       interpolation='bilinear')
+        im3 = ax3.imshow(mri,'gray',
+                       extent=extent,
+                       interpolation='none')
+        plt.show()
+        
+        
+    def plotPatterns(self,plotList):
+        minx = min(self.x)
+        maxx = max(self.x)
+        nPlots = len(plotPlist)
+        fig,axes = plt.subplots(1,nPlots,
+                                sharex='col',sharey='row',
+                                figsize=(nPlots*3+1,4))
+        fig.subplots_adjust(wspace=0.3)
+        for ax in axes:
+            # CONTINUE HERE:
+            im = ax.imshow(y,cmap,
+                           extent=[minx,maxx,minx,maxx],
+                           interpolation='none')
+            ax.set_title(title)
+            ax.set_xlabel('position [mm]')
+        fig.colorbar(im, ax=ax)
+        plt.show()

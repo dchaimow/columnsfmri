@@ -104,7 +104,7 @@ def simulatefMRIOfColumnPatterns(parameters):
         # initialize noise pattern for simulation of columns
         gwn = sim.gwnoise()
         # simulate column pattern
-        columnPattern =  sim.columnPattern(rho,deltaRelative,gwn) 
+        columnPattern,_ =  sim.columnPattern(rho,deltaRelative,gwn) 
         # simulate BOLD response pattern
         boldPattern,_,_ = sim.bold(fwhm,beta,columnPattern);
     
@@ -430,15 +430,15 @@ class simulation:
         self.k1, self.k2 = np.meshgrid(self.k, self.k)
         
     def gwnoise(self):
-        return np.random.randn(self.N,self.N)
+        return np.random.randn(self.N,self.N) + 1j* np.random.randn(self.N,self.N)
     
     def ft2(self,y):
         return (self.L**2/self.N**2)*np.fft.fftshift(
             np.fft.fft2(np.fft.ifftshift(y)))
     
     def ift2(self,fy):
-        return (self.N**2 * self.dk**2)*np.fft.fftshift(
-            np.fft.ifft2(np.fft.ifftshift(fy)))
+        return (self.N**2 * self.dk**2)*np.fft.ifftshift(
+            np.fft.ifft2(np.fft.fftshift(fy)))
     
     def columnPattern(self,rho,deltaRelative,gwnoise):
         fwhmfactor = 2*np.sqrt(2*np.log(2))
@@ -452,8 +452,10 @@ class simulation:
         C = (np.sqrt(meanpower(FORIENTNotNormalized)))*np.sqrt(np.pi/8)
         FORIENT = FORIENTNotNormalized/C
         noiseF = self.ft2(gwnoise)
-        neuronal = np.real(self.ift2(FORIENT*noiseF))
-        return neuronal
+        gamma = self.ift2(FORIENT*noiseF)
+        neuronal = np.real(gamma)
+        preferredOrientation = np.angle(gamma)
+        return neuronal, preferredOrientation
     
     def bold(self,fwhm,beta,y):
         if fwhm==0:
@@ -508,42 +510,20 @@ class simulation:
         r = c[0,1]
         return r
         
-    def plotPattern(self,y):
-        fig, ax = plt.subplots()
+    def plotPattern(self,y,cmap='gray',title=None, ax=None):
+        if not(ax):
+            fig, ax = plt.subplots()
+        else:
+            fig = plt.gcf()
         minx = min(self.x)
         maxx = max(self.x)
-        im = ax.imshow(y,'gray',
-                       extent=[minx,maxx,minx,maxx],
-                       interpolation='bilinear')
-        fig.colorbar(im, ax=ax)
-        plt.show()
-    
-    def plotVoxels(self,y):
-        fig, ax = plt.subplots()
-        minx = min(self.x)
-        maxx = max(self.x)
-        im = ax.imshow(y,'gray',
+        im = ax.imshow(y,cmap,
                        extent=[minx,maxx,minx,maxx],
                        interpolation='none')
-        fig.colorbar(im, ax=ax)
-        plt.show()
-    
-    def plotColumnsBoldMRI(self,columns,bold,mri):
-        fig = plt.figure()
-        ax1 = fig.add_subplot(1,3,1)
-        ax2 = fig.add_subplot(1,3,2)
-        ax3 = fig.add_subplot(1,3,3)
-        minx = min(self.x)
-        maxx = max(self.x)
-        extent = [minx,maxx,minx,maxx]
-        im1 = ax1.imshow(columns,'gray',
-                       extent=extent,
-                       interpolation='bilinear')
-        im2 = ax2.imshow(bold,'gray',
-                       extent=extent,
-                       interpolation='bilinear')
-        im3 = ax3.imshow(mri,'gray',
-                       extent=extent,
-                       interpolation='none')
-        plt.show()
+        ax.set_title(title)
+        ax.set_xlabel('position [mm]')
+        fig.colorbar(im,ax=ax)
+        #plt.show()
+
+            
     
