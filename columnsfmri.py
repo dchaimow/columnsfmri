@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import norm, chi2, gamma, weibull_min
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 def displayFigureA(results):
     """
@@ -36,28 +37,39 @@ def displayFigureA(results):
 
     plt.show()
     
-
 def printResults(results):
-    print('optimized quantity                 | optimal value | optimal voxel width')
-    print('-----------------------------------+---------------+--------------------')
-    print('univariate detection probability   | %.2f          | %.2f mm            ' %
-          (results['pDetectUnivariate_max'],results['pDetectUnivariate_optW']))
-    print('multivariate detection probability | %.2f          | %.2f mm            ' %
-          (results['pDetectMultivariate_max'],results['pDetectMultivariate_optW']))
-    print('decoding probability - 2 classes   | %.2f          | %.2f mm            ' %
-          (results['pDecode2_max'],results['pDecode2_optW']))
-    print('decoding accuracy    - 2 classes   | %.2f          | %.2f mm            ' %
-          (results['accuracyDecode2_max'],results['accuracyDecode2_optW']))
-    print('decoding probability - 4 classes   | %.2f          | %.2f mm            ' %
-          (results['pDecode4_max'],results['pDecode4_optW']))
-    print('decoding accuracy    - 4 classes   | %.2f          | %.2f mm            ' %
-          (results['accuracyDecode4_max'],results['accuracyDecode4_optW']))
-    print('decoding probability - 8 classes   | %.2f          | %.2f mm            ' %
-          (results['pDecode8_max'],results['pDecode8_optW']))
-    print('decoding accuracy    - 8 classes   | %.2f          | %.2f mm            ' %
-          (results['accuracyDecode8_max'],results['accuracyDecode8_optW']))
-    print('pattern correlation                | %.2f          | %.2f mm            ' %
-          (results['patternCorrelation_max'],results['patternCorrelation_optW']))
+    data = [['univariate detection probability',
+             results['pDetectUnivariate_max'],
+             results['pDetectUnivariate_optW']],
+            ['multivariate detection probability',
+             results['pDetectMultivariate_max'],
+             results['pDetectUnivariate_optW']],
+            ['decoding probability - 2 classes',
+             results['pDecode2_max'],
+             results['pDecode2_optW']],
+            ['decoding accuracy    - 2 classes',
+             results['accuracyDecode2_max'],
+             results['accuracyDecode2_optW']],
+            ['decoding probability - 4 classes',
+             results['pDecode4_max'],
+             results['pDecode4_optW']],
+            ['decoding accuracy    - 4 classes',
+             results['accuracyDecode4_max'],
+             results['accuracyDecode4_optW']],
+            ['decoding probability - 8 classes',
+             results['pDecode8_max'],
+             results['pDecode8_optW']],
+            ['decoding accuracy    - 8 classes',
+             results['accuracyDecode8_max'],
+             results['accuracyDecode8_optW']],
+            ['pattern correlation',
+             results['patternCorrelation_max'],
+             results['patternCorrelation_optW']]]
+
+    table = pd.DataFrame(data,columns=['optimized quantity',
+                                       'optimal value',
+                                       'optimal voxel width'])
+    return table
 
 def cdfModelWeibull(a,b,y0):
     f = lambda x: y0+(weibull_min.cdf(x,b,scale=a)-weibull_min.cdf(0,b,scale=a))*(1-y0)

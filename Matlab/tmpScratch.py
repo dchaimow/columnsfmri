@@ -77,3 +77,27 @@ importlib.reload(my_module)
             ax.set_xlabel('position [mm]')
         fig.colorbar(im, ax=ax)
         plt.show()
+        
+        
+        
+def printResults(results):
+    print('optimized quantity                 | optimal value | optimal voxel width')
+    print('-----------------------------------+---------------+--------------------')
+    print('univariate detection probability   | %.2f          | %.2f mm            ' %
+          (results['pDetectUnivariate_max'],results['pDetectUnivariate_optW']))
+    print('multivariate detection probability | %.2f          | %.2f mm            ' %
+          (results['pDetectMultivariate_max'],results['pDetectMultivariate_optW']))
+    print('decoding probability - 2 classes   | %.2f          | %.2f mm            ' %
+          (results['accuracyDecode2_max'],results['pDecode2_optW']))
+    print('decoding accuracy    - 2 classes   | %.2f          | %.2f mm            ' %
+          (results['pDecode2_max'],results['accuracyDecode2_optW']))
+    print('decoding probability - 4 classes   | %.2f          | %.2f mm            ' %
+          (results['pDecode4_max'],results['pDecode4_optW']))
+    print('decoding accuracy    - 4 classes   | %.2f          | %.2f mm            ' %
+          (results['accuracyDecode4_max'],results['accuracyDecode4_optW']))
+    print('decoding probability - 8 classes   | %.2f          | %.2f mm            ' %
+          (results['pDecode8_max'],results['pDecode8_optW']))
+    print('decoding accuracy    - 8 classes   | %.2f          | %.2f mm            ' %
+          (results['accuracyDecode8_max'],results['accuracyDecode8_optW']))
+    print('pattern correlation                | %.2f          | %.2f mm            ' %
+          (results['patternCorrelation_max'],results['patternCorrelation_optW']))
