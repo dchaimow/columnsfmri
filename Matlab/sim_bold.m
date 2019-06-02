@@ -17,6 +17,6 @@ else
     fwfactor = 2*sqrt(2*log(2));
     psf = beta * normpdf(sim.x1,0,fwhm/fwfactor).*...
         normpdf(sim.x2,0,fwhm/fwfactor);
-    MTF = beta* exp(-(sim.k1.^2+sim.k2.^2)*2*(fwhm/fwfactor)^2*pi^2);
+    MTF = beta * exp(-(sim.k1.^2+sim.k2.^2)*2*(fwhm/fwfactor)^2*pi^2);
     by = sim_ift2(MTF.*sim_ft2(y,sim.dx),sim.dk);
 end

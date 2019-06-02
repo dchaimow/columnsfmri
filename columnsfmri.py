@@ -466,7 +466,7 @@ class simulation:
         noiseF = self.ft2(gwnoise)
         gamma = self.ift2(FORIENT*noiseF)
         neuronal = np.real(gamma)
-        preferredOrientation = np.angle(gamma)
+        preferredOrientation = np.angle(gamma)/2
         return neuronal, preferredOrientation
     
     def bold(self,fwhm,beta,y):
@@ -492,7 +492,7 @@ class simulation:
             centerIdx = int(self.N/2)
             downSampledY = yk[centerIdx-nSamplesHalf:centerIdx+nSamplesHalf,
                               centerIdx-nSamplesHalf:centerIdx+nSamplesHalf]
-            my = abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(downSampledY))))/w**2
+            my = np.real(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(downSampledY))))/w**2
         else:
             my = None
         return my

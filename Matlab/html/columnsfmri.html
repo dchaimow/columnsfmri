@@ -1,0 +1,313 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Demo of columnsfmri</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-06-02"><meta name="DC.source" content="columnsfmri.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Demo of <tt>columnsfmri</tt></h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Simulation and optimization of fMRI of cortical columns</a></li><li><a href="#2">A tour of the inner workings of the model</a></li><li><a href="#13">Run optimization simulation</a></li></ul></div><h2 id="1">Simulation and optimization of fMRI of cortical columns</h2><p>Import model implementation from columnsfmri.py and other useful modules.</p><pre class="codeinput">close <span class="string">all</span>;
+set(0,<span class="string">'DefaultAxesFontSize'</span>,14);
+</pre><h2 id="2">A tour of the inner workings of the model</h2><p>Inititialize simulation using a 512 x 512 grid on an area of 24 x 24 mm.</p><pre class="codeinput">N = 512;
+L = 24;
+sim = setupsim(N,L);
+</pre><p>Simulate a column pattern by filtering Gaussian white noise. Rho is the main pattern frequency, delta specifies the amount of irregularity.</p><pre class="codeinput">gwn = sim_gwnoise(sim);
+rho = 0.2;
+deltaRelative = 1;
+[columnPattern, prefMap, ~] = <span class="keyword">...</span>
+    sim_columnPattern(sim,rho,deltaRelative,gwn);
+subplot(1,2,1);
+sim_plotPattern(sim,prefMap,<span class="string">'preferred stimulus (i.e. orientation)'</span>,<span class="string">'hsv'</span>);
+subplot(1,2,2);
+sim_plotPattern(sim,columnPattern,<span class="string">'differential neuronal response'</span>);
+</pre><img vspace="5" hspace="5" src="columnsfmri_01.png" alt=""> <p>Simulate a differential spatial BOLD response with a FWHM of 2 mm, and a corresponding single condition average response amplitude of 5%.</p><pre class="codeinput">fwhm = 2;
+beta = 0.05;
+[boldPattern,~,~] = sim_bold(sim,fwhm,beta,columnPattern);
+subplot(1,2,1);
+sim_plotPattern(sim,columnPattern,<span class="string">'differential neuronal response'</span>);
+subplot(1,2,2);
+sim_plotPattern(sim,boldPattern,<span class="string">'BOLD response'</span>);
+</pre><img vspace="5" hspace="5" src="columnsfmri_02.png" alt=""> <p>Simulate MRI sampling using a voxel width of 2 mm.</p><pre class="codeinput">w = 2;
+downFactor = sim.dx/w;
+mriPattern = sim_mri(sim,downFactor,boldPattern);
+subplot(1,2,1);
+sim_plotPattern(sim,boldPattern,<span class="string">'BOLD response'</span>);
+subplot(1,2,2);
+sim_plotPattern(sim,mriPattern,<span class="string">'fMRI pattern'</span>);
+</pre><img vspace="5" hspace="5" src="columnsfmri_03.png" alt=""> <p>The amount of functional contrast <i>c</i> can be quantified as the standard deviation of the imaged responses (contrast range).</p><pre class="codeinput">subplot(1,1,1);
+histogram(mriPattern(:));
+c = std(mriPattern(:))
+</pre><pre class="codeoutput">
+c =
+
+    0.0420
+
+</pre><img vspace="5" hspace="5" src="columnsfmri_04.png" alt=""> <p>Simulate the noise level as a function of voxel width.</p><pre class="codeinput">w = linspace(0.1,3,100);
+V = w.^3;
+TR = 2;
+nT = 1;
+differentialFlag = true;
+noiseType = <span class="string">'3T'</span>;
+SNR = 1./<span class="keyword">...</span>
+    noiseModel(V,noiseType,TR,nT,differentialFlag);
+plot(w,SNR);
+xlabel(<span class="string">'voxel width [mm]'</span>);
+ylabel(<span class="string">'multi measurement SNR'</span>);
+title(<span class="string">'3T, TR = 2s, nT = 100'</span>);
+</pre><img vspace="5" hspace="5" src="columnsfmri_05.png" alt=""> <p>SNR for a voxel width of 2 mm:</p><pre class="codeinput">w = 2;
+V = w^3;
+SNR = 1./noiseModel(V,noiseType,TR,nT,differentialFlag)
+</pre><pre class="codeoutput">
+SNR =
+
+   36.2365
+
+</pre><p>Contrast to noise ratio = c * SNR:</p><pre class="codeinput">CNR = c * SNR
+</pre><pre class="codeoutput">
+CNR =
+
+    1.5236
+
+</pre><p>Calculate detection probability from CNR and number of voxels.</p><pre class="codeinput">CNR = 1
+nVoxels = 10
+p = detectionProbability(CNR,nVoxels)
+</pre><pre class="codeoutput">
+CNR =
+
+     1
+
+
+nVoxels =
+
+    10
+
+
+p =
+
+    0.5176
+
+</pre><p>Add noise to MRI pattern:</p><pre class="codeinput">mriPlusNoisePattern = mriPattern + <span class="keyword">...</span>
+    (1/SNR) * randn(size(mriPattern));
+subplot(1,2,1);
+sim_plotPattern(sim,mriPattern,<span class="string">'fMRI pattern (without noise)'</span>);
+subplot(1,2,2);
+sim_plotPattern(sim,mriPlusNoisePattern,<span class="string">'fMRI pattern with noise'</span>);
+</pre><img vspace="5" hspace="5" src="columnsfmri_06.png" alt=""> <p>Calculate the correlation between the original and the (interpolated) imaged pattern.</p><pre class="codeinput">R = patternCorrelation(sim,columnPattern,mriPlusNoisePattern)
+</pre><pre class="codeoutput">
+R =
+
+    0.7058
+
+</pre><h2 id="13">Run optimization simulation</h2><p>Set standard parameters for optimization simulation.</p><pre class="codeinput">parameters = setParameters()
+</pre><pre class="codeoutput">
+parameters = 
+
+  struct with fields:
+
+    randomNumberSeed: 23
+             nTrials: 32
+                   N: 512
+                   L: 24
+         downFactors: [1&times;41 double]
+                 rho: 0.6250
+               delta: 0.5000
+                fwhm: 1.0200
+                beta: 0.0350
+      sliceThickness: 2.5000
+               AFlat: 87
+                  TR: 2
+                  nT: 1000
+           noiseType: '7T'
+
+</pre><p>Run optimization simulation:</p><pre class="codeinput">results = simulatefMRIOfColumnPatterns(parameters);
+</pre><p>Summarize results:</p><pre class="codeinput">printResults(results)
+</pre><pre class="codeoutput">optimized quantity                 | optimal value | optimal voxel width
+-----------------------------------+---------------+--------------------
+univariate detection probability   | 0.43          | 0.86 mm            
+multivariate detection probability | 1.00          | 0.80 mm            
+decoding probability - 2 classes   | 1.00          | 0.80 mm            
+decoding accuracy    - 2 classes   | 0.97          | 0.80 mm            
+decoding probability - 4 classes   | 1.00          | 0.80 mm            
+decoding accuracy    - 4 classes   | 0.70          | 0.80 mm            
+decoding probability - 8 classes   | 1.00          | 0.80 mm            
+decoding accuracy    - 8 classes   | 0.32          | 0.80 mm            
+pattern correlation                | 0.78          | 0.67 mm            
+</pre><p>Plot results:</p><pre class="codeinput">displayFigureA(results);
+</pre><img vspace="5" hspace="5" src="columnsfmri_07.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Demo of |columnsfmri|
+%% Simulation and optimization of fMRI of cortical columns
+% Import model implementation from columnsfmri.py and other useful modules.
+
+close all;
+set(0,'DefaultAxesFontSize',14);
+%% A tour of the inner workings of the model
+% Inititialize simulation using a 512 x 512 grid on an area of 24 x 24 mm.
+
+N = 512; 
+L = 24;
+sim = setupsim(N,L);
+%% 
+% Simulate a column pattern by filtering Gaussian white noise. Rho is the 
+% main pattern frequency, delta specifies the amount of irregularity.
+
+gwn = sim_gwnoise(sim);
+rho = 0.2;
+deltaRelative = 1;
+[columnPattern, prefMap, ~] = ...
+    sim_columnPattern(sim,rho,deltaRelative,gwn);
+subplot(1,2,1);
+sim_plotPattern(sim,prefMap,'preferred stimulus (i.e. orientation)','hsv');
+subplot(1,2,2);
+sim_plotPattern(sim,columnPattern,'differential neuronal response');
+%% 
+% Simulate a differential spatial BOLD response with a FWHM of 2 mm, and 
+% a corresponding single condition average response amplitude of 5%.
+
+fwhm = 2;
+beta = 0.05;
+[boldPattern,~,~] = sim_bold(sim,fwhm,beta,columnPattern);
+subplot(1,2,1);
+sim_plotPattern(sim,columnPattern,'differential neuronal response');
+subplot(1,2,2);
+sim_plotPattern(sim,boldPattern,'BOLD response');
+%% 
+% Simulate MRI sampling using a voxel width of 2 mm.
+
+w = 2;
+downFactor = sim.dx/w;
+mriPattern = sim_mri(sim,downFactor,boldPattern);
+subplot(1,2,1);
+sim_plotPattern(sim,boldPattern,'BOLD response');
+subplot(1,2,2);
+sim_plotPattern(sim,mriPattern,'fMRI pattern');
+%% 
+% The amount of functional contrast _c_ can be quantified as the standard 
+% deviation of the imaged responses (contrast range).
+
+subplot(1,1,1);
+histogram(mriPattern(:));
+c = std(mriPattern(:))
+%% 
+% Simulate the noise level as a function of voxel width.
+
+w = linspace(0.1,3,100);
+V = w.^3;
+TR = 2;
+nT = 1;
+differentialFlag = true;
+noiseType = '3T';
+SNR = 1./...
+    noiseModel(V,noiseType,TR,nT,differentialFlag);
+plot(w,SNR);
+xlabel('voxel width [mm]');
+ylabel('multi measurement SNR');
+title('3T, TR = 2s, nT = 100');
+%% 
+% SNR for a voxel width of 2 mm:
+
+w = 2;
+V = w^3;
+SNR = 1./noiseModel(V,noiseType,TR,nT,differentialFlag)
+%% 
+% Contrast to noise ratio = c * SNR:
+
+CNR = c * SNR
+%% 
+% Calculate detection probability from CNR and number of voxels.
+
+CNR = 1
+nVoxels = 10
+p = detectionProbability(CNR,nVoxels)
+%% 
+% Add noise to MRI pattern:
+
+mriPlusNoisePattern = mriPattern + ...
+    (1/SNR) * randn(size(mriPattern));
+subplot(1,2,1);
+sim_plotPattern(sim,mriPattern,'fMRI pattern (without noise)');
+subplot(1,2,2);
+sim_plotPattern(sim,mriPlusNoisePattern,'fMRI pattern with noise');
+%% 
+% Calculate the correlation between the original and the (interpolated) 
+% imaged pattern.
+
+R = patternCorrelation(sim,columnPattern,mriPlusNoisePattern)
+%% Run optimization simulation
+% Set standard parameters for optimization simulation.
+
+parameters = setParameters()
+%% 
+% Run optimization simulation:
+
+results = simulatefMRIOfColumnPatterns(parameters);
+%% 
+% Summarize results:
+
+printResults(results)
+%% 
+% Plot results:
+
+displayFigureA(results);
+##### SOURCE END #####
+--></body></html>
