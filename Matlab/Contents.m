@@ -3,7 +3,7 @@
 %
 % This MATLAB code supplements 
 % 
-% Chaimow, D., Ugurbil, K., Shmuel, A., 2017. 
+% Chaimow, D., Ugurbil, K., Shmuel, A., 2018. 
 % Optimization of functional MRI for detection, decoding and high-resolution 
 % imaging of the response patterns of cortical columns. 
 % Neuroimage. doi:10.1016/j.neuroimage.2017.04.011

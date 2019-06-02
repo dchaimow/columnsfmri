@@ -16,5 +16,5 @@ File               | Description
 -------------------|-----------------------------------------
 columnsfmri.py     | contains all the code ported to python
 columnsfmri.ipynb  | jupyter notebook presentation
-Matlab/            | code from previous Matlab implementation
+Matlab/            | Matlab implementation
 

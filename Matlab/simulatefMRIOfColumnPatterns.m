@@ -200,74 +200,12 @@ results.patternCorrelation_max   = maxCor;
 results.patternCorrelation_optW  = optWCor;
 
 % print and display results
-printResults(results);
-displayFigureA(results);
-displayFigureB(results);
-displayFigureC(results);
+%printResults(results);
+%displayFigureA(results);
+%displayFigureB(results);
+%displayFigureC(results);
 end
 
-function printResults(results)
-% print out results
-fprintf('optimized quantity                 | optimal value | optimal voxel width\n');
-fprintf('-----------------------------------+---------------+--------------------\n');
-fprintf('univariate detection probability   | %.2f          | %.2f mm            \n',...
-    results.pDetectUnivariate_max,results.pDetectUnivariate_optW);
-fprintf('multivariate detection probability | %.2f          | %.2f mm            \n',...
-    results.pDetectMultivariate_max,results.pDetectMultivariate_optW);
-fprintf('decoding probability - 2 classes   | %.2f          | %.2f mm            \n',...
-    results.pDecode2_max,results.pDecode2_optW);
-fprintf('decoding accuracy    - 2 classes   | %.2f          | %.2f mm            \n',...
-    results.accuracyDecode2_max,results.accuracyDecode2_optW);
-fprintf('decoding probability - 4 classes   | %.2f          | %.2f mm            \n',...
-    results.pDecode4_max,results.pDecode4_optW);
-fprintf('decoding accuracy    - 4 classes   | %.2f          | %.2f mm            \n',...
-    results.accuracyDecode4_max,results.accuracyDecode4_optW);
-fprintf('decoding probability - 8 classes   | %.2f          | %.2f mm            \n',...
-    results.pDecode8_max,results.pDecode8_optW);
-fprintf('decoding accuracy    - 8 classes   | %.2f          | %.2f mm            \n',...
-    results.accuracyDecode8_max,results.accuracyDecode8_optW);
-fprintf('pattern correlation                | %.2f          | %.2f mm            \n',...
-    results.patternCorrelation_max,results.patternCorrelation_optW);
-end
-
-function displayFigureA(results)
-% figure A - optimization of all 3 objectives
-f = createFigure();
-c = get(f,'DefaultAxesColorOrder');
-
-subplot(1,3,1);
-plot(results.w,results.pDetectUnivariate,'Color',c(2,:));
-line([results.pDetectUnivariate_optW results.pDetectUnivariate_optW],...
-    [0 1],'Color',c(2,:),'LineStyle','--')
-axis([min(results.w) max(results.w) 0 1]);
-axis square;
-box off;
-xlabel('voxel width [mm]');
-ylabel('probability');
-title('Univariate detection');
-
-subplot(1,3,2);
-plot(results.w,results.accuracyDecode2,'Color',c(5,:));
-line([results.accuracyDecode2_optW results.accuracyDecode2_optW],[0 1],...
-    'Color',c(5,:),'LineStyle','--')
-axis([min(results.w) max(results.w) 0.5 1]);
-axis square;
-box off;
-xlabel('voxel width [mm]');
-ylabel('accuracy');
-title('Multivariate decoding');
-
-subplot(1,3,3);
-plot(results.w,results.patternCorrelation,'Color',c(1,:));
-line([results.patternCorrelation_optW results.patternCorrelation_optW],...
-    [0 1],'Color',c(1,:),'LineStyle','--')
-axis([min(results.w) max(results.w) 0 1]);
-axis square;
-box off;
-xlabel('voxel width [mm]');
-ylabel('correlation');
-title('Reconstruction');
-end
 
 function displayFigureB(results)
 % figure B - optimization of single voxel CNR
@@ -317,38 +255,6 @@ function displayFigureD(results)
 setFigureOptions;
 c = get(0,'DefaultAxesColorOrder');
 
-end
-
-function f = createFigure(figureSize)
-c = [...
-    0.6   1      0.7    ;...
-    1      1  0.9   ;...
-    0.1  1 1      ;...
-    0.8 1 0.6    ;...
-    0.3333  1 0.5;...
-    0.58   0.67   0.9];
-
-screenSize = get(0,'ScreenSize');
-
-f = figure;
-
-% set line properties:
-set(f,'DefaultLineLineWidth',1.5);
-set(f,'DefaultLineMarkerSize',4);
-
-% set axes Properties
-set(f,'DefaultAxesLineWidth',1);
-set(f,'DefaultAxesFontSize',12);
-set(f,'DefaultAxesFontName','Arial');
-set(f,'DefaultAxesColor','None');
-set(f,'DefaultAxesColorOrder',hsv2rgb(c));
-
-% set figure properties
-set(f,'Color','White');
-figurePos = get(f,'Position');
-set(f,'Position',...
-    [figurePos(1) screenSize(4)-figurePos(2),...
-    figurePos(3:4)]);
 end
 
 function f = cdfModel(a,b,y0,cdf)

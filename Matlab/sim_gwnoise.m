@@ -6,5 +6,5 @@ function y = sim_gwnoise(sim)
 %
 %   see also sim_columnPattern, setupsim
 
-y = randn(sim.N,sim.N);
+y = randn(sim.N,sim.N) + 1j*randn(sim.N,sim.N);
 

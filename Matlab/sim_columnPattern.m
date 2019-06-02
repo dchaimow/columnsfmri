@@ -1,4 +1,5 @@
-function [neuronal,FORIENT] = sim_columnPattern(sim,rho,delta,gwnoise)
+function [neuronal,prefMap, FORIENT] = ...
+sim_columnPattern(sim,rho,delta,gwnoise)
 % SIM_COLUMNPATTERN simulates realistic pattern of cortical columns. 
 %   [neuronal,FORIENT] = SIM_COLUMNPATTERN(sim,rho,delta,gwnoise) simulates
 %   the differential neuronal response of a pattern of cortical columns by
@@ -24,6 +25,9 @@ end
 C = (sqrt(meanpower(FORIENTNotNormalized)))*sqrt(pi/8);
 FORIENT = FORIENTNotNormalized/C;
 noiseF = sim_ft2(gwnoise,sim.dx);
-neuronal = sim_ift2(FORIENT.*noiseF,sim.dk);
+gamma = sim_ift2(FORIENT.*noiseF,sim.dk);
+neuronal = real(gamma);
+prefMap = angle(gamma)/2;
+
 
 
