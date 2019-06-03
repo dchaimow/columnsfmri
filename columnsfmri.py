@@ -89,7 +89,7 @@ def simulatefMRIOfColumnPatterns(parameters):
     TR             = parameters['TR']
     nT             = parameters['nT']
     noiseType      = parameters['noiseType']
-    AFlat          = parameters['AFlat']
+    roiArea          = parameters['roiArea']
     
     nWRange = len(wRange)
     
@@ -100,7 +100,7 @@ def simulatefMRIOfColumnPatterns(parameters):
     voxelVOfW = sliceThickness*wRange**2;
 
     # number of voxels as a function of voxel width (assuming single slice)
-    nVoxelsOfW = AFlat/(wRange**2);
+    nVoxelsOfW = roiArea/(wRange**2);
 
     # noise level as a function of voxel volume
     differentialFlag = True;
@@ -280,9 +280,11 @@ def setParameters(*args):
  
     fwhm                BOLD PSF FWHM [mm]
     beta                BOLD PSF amplitude [relative signal ch.]
+                        = expected average amplitude in single cond.
+                        response
  
     sliceThickness      slice thickness [mm]
-    AFlat               FOV area, determines number of voxels [mm^2]
+    roiArea             FOV area, determines number of voxels [mm^2]
     TR                  TR (repetition time)
     nT                  number of volumes (measurements), 
                         (nT/2 per one of two conditions)
@@ -318,7 +320,7 @@ def setParameters(*args):
 
     # further MRI parameters affecting SNR calculation
     parameters['sliceThickness'] = 2.5  # mm
-    parameters['AFlat'] = 87  # mm^2 area for calculating nVoxels (from odc rois)
+    parameters['roiArea'] = 87  # mm^2 area for calculating nVoxels (from odc rois)
     parameters['TR'] = 2  # s
     parameters['nT'] = 1000  # number of volumes (sum of both conditions)
     parameters['noiseType'] = '7T'  # alternatively: '3T'
@@ -408,7 +410,39 @@ def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
     k = k * F
     sigma = np.sqrt((4/(k**2*V**2*nT)) + ((2*l**2)/(nT/2)**2)*s)
     return sigma
+    
+def decodingProbability(cnr,nVoxels,nClasses):
+    a = 0.26
+    mvCNR = cnr * nVoxels**a
+    if nClasses==2:
+        fPDecode = cdfModelWeibull(2.0675,3.4101,0.05)
+    elif nClasses==4:
+        fPDecode = cdfModelWeibull(2.8451,3.4770,0.05)
+    elif nClasses==8:      
+        fPDecode = cdfModelWeibull(3.8086,3.2733,0.05)
+    else:
+        raise ValueError('only 2,4 or 8 classes supported!')
+    return fPDecode(mvCNR)
 
+def decodingAccuracy(cnr,nVoxels,nClasses):
+    a = 0.26
+    mvCNR = cnr * nVoxels**a
+    if nClasses==2:
+        fMeanClassAccuracy = cdfModelWeibull(4.7018,1.9954,1/2)
+    elif nClasses==4:
+        fMeanClassAccuracy = cdfModelWeibull(8.0900,2.1585,1/4)
+    elif nClasses==8:      
+        fMeanClassAccuracy = cdfModelWeibull(15.8022,1.9954,1/8)
+    else:
+        raise ValueError('only 2,4 or 8 classes supported!')
+    return fMeanClassAccuracy(mvCNR)
+
+def detectionProbabilityMulti(cnr,nVoxels):
+    a = 0.26
+    mvCNR = cnr * nVoxels**a
+    fPMultiDetect = cdfModelWeibull(1.9038,3.5990,0.05)
+    return fPMultiDetect(mvCNR)
+    
 def detectionProbability(cnr,N):
     if np.size(cnr)>1:
         p = np.zeros(cnr.shape)
