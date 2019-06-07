@@ -1,20 +1,26 @@
 function sigma = noiseModel(V,noiseType,TR,nT,differentialFlag)
 % noiseModel predicts the fMRI noise level.
 %   sigma = noiseModel(V,noiseType,TR,nT,differentialFlag) calculates the
-%   standard deviation sigmal of fMRI noise after differential analysis of
-%   multiple measurements nT (see below) using voxel volume V and TR.
+%   standard deviation of fMRI noise relative to signal after differential 
+%   analysis of multiple measurements nT (see below) using voxel volume V 
+%   and TR.
 %
 %   nT is the number of volumes to be averaged:
-%   it is used to scale the thermal noise factor, assuming thermal noise in
+%   it is used to scale the thermal noise factor, assuming thermal noise is
 %   uncorrelated in time
 %   AND it is used to scale the physiological noise factor under the
 %   assuption that physiological noise is a AR(1) process with
 %   q = exp(-TR/tau), tau = 15 s (Purdon and Weisskoff 1998)
 %
-%   with set differential flag nT/2 volumes belong to condition A dn nT/2
+%   with set differential flag nT/2 volumes belong to condition A and nT/2
 %   volumes to condition B
 %
 %   The noise model is based on Triantafyllou et al. 2005.
+%   It is specified as  
+%     noiseType = {'3T','7T','Thermal','Physiological'}
+%    or using model parameters:
+%     noisetype = [k,l,T1] corresponding to kappa and lambda in 
+%   Tiantafyllou et al. 2005 and time constant T1
 
 TR0 = 5.4;
 if isnumeric(noiseType)

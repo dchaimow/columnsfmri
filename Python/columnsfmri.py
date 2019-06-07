@@ -6,7 +6,9 @@ import pandas as pd
 
 def displayFigureA(results):
     """
-    figure A - optimization of all 3 objectives
+    displays figure showing optimization of all 3 objectives
+    
+    results is a dictionary as returned by simulatefMRIOfColumnPatterns()
     """
     fig,(ax1,ax2,ax3) = plt.subplots(1,3,sharex='col',figsize=(10,3))
     fig.subplots_adjust(wspace=0.3)
@@ -38,6 +40,11 @@ def displayFigureA(results):
     plt.show()
     
 def printResults(results):
+    """
+    prints table summarizing simulation results
+    
+    results is a dictionary as returned by simulatefMRIOfColumnPatterns()
+    """
     data = [['univariate detection probability',
              results['pDetectUnivariate_max'],
              results['pDetectUnivariate_optW']],
@@ -72,10 +79,38 @@ def printResults(results):
     return table
 
 def cdfModelWeibull(a,b,y0):
+    """
+    Weibull cumulative distribution function
+    """
     f = lambda x: y0+(weibull_min.cdf(x,b,scale=a)-weibull_min.cdf(0,b,scale=a))*(1-y0)
     return f
 
 def simulatefMRIOfColumnPatterns(parameters):
+    """
+    simulatefMRIOfColumnPatterns simulates fMRI of column patterns. 
+    
+    results = simulatefMRIOfColumnPatterns(parameters) runs simulations of
+    cortical column patterns and their imaging. It quantifies measures 
+    related to possible analysis objectives and approaches, and estimates
+    optimal voxel widths. Results are returned in dictionary results.
+ 
+    parameters is a dictionary of parameters that can be set using
+    setParameters(s1,...).
+
+    see also setParameters
+
+    current limitations/ideas for future extensions:
+    - only 2D single slice case
+      alternatively: isotropic voxels, multiple slices within constant 3D volume
+    - no arbitrary spectra
+      alternatively: specify filter spectrum and/or amplitude
+    - detection probability calculated from mvCNR fitting
+      alternatively: calculate analytically, simulate detection probability
+    - decoding probability and decoding accuracy from mvCNR fitting
+      alternatively: simulate decoding directly,
+      note: fitting and simulation depends on some additional assumptions and/or parameters
+      (e.g. trial length)
+    """
     # set parameters
     nTrials        = parameters['nTrials']
     Nsim           = parameters['N']
@@ -244,12 +279,6 @@ def simulatefMRIOfColumnPatterns(parameters):
     results['patternCorrelation']       = cor
     results['patternCorrelation_max']   = maxCor
     results['patternCorrelation_optW']  = optWCor
-    
-    # visualize results
-    # printResults(results)
-    # displayFigureA(results)
-    # displayFigureB(results)
-    # displayFigureC(results)
 
     return results
     
@@ -359,9 +388,33 @@ def setParameters(*args):
     return parameters
 
 def meanpower(s):
+    """
+    calculates the mean power of a signal or pattern
+    """
     return np.mean(np.abs(s**2))
 
 def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
+    """
+    sigma = noiseModel(V,TR,nT,differentialFlag,...) calculates the
+    standard deviation of fMRI noise relative to signal after differential analysis of
+    multiple measurements nT (see below) using voxel volume V and TR.
+ 
+    nT is the number of volumes to be averaged:
+    it is used to scale the thermal noise factor, assuming thermal noise is
+    uncorrelated in time
+    AND it is used to scale the physiological noise factor under the
+    assuption that physiological noise is a AR(1) process with
+    q = exp(-TR/tau), tau = 15 s (Purdon and Weisskoff 1998)
+ 
+    with differential==true flag nT/2 volumes belong to condition A and nT/2
+    volumes to condition B
+ 
+    The noise model is based on Triantafyllou et al. 2005.
+    It is specified as an additional argument 
+     noiseType = {'3T','7T','Thermal','Physiological'}
+    or as additional model parameters:
+     k,l,T1 corresponding to kappa and lambda in Tiantafyllou et al. 2005 and time constant T1
+    """
     TR0 = 5.4
     
     noiseType = kwargs.get('noiseType', None)
@@ -388,7 +441,7 @@ def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
         l = 0 
         T1 = 1.939 
     if noiseType == 'Physiological':
-        k = np.Inf  # TEST THIS!
+        k = np.Inf 
         l = 0.0113 
         T1 = 1.939 
     
@@ -412,6 +465,9 @@ def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
     return sigma
     
 def decodingProbability(cnr,nVoxels,nClasses):
+    """
+    
+    """
     a = 0.26
     mvCNR = cnr * nVoxels**a
     if nClasses==2:
@@ -425,6 +481,9 @@ def decodingProbability(cnr,nVoxels,nClasses):
     return fPDecode(mvCNR)
 
 def decodingAccuracy(cnr,nVoxels,nClasses):
+    """
+    
+    """
     a = 0.26
     mvCNR = cnr * nVoxels**a
     if nClasses==2:
@@ -438,12 +497,18 @@ def decodingAccuracy(cnr,nVoxels,nClasses):
     return fMeanClassAccuracy(mvCNR)
 
 def detectionProbabilityMulti(cnr,nVoxels):
+    """
+
+    """
     a = 0.26
     mvCNR = cnr * nVoxels**a
     fPMultiDetect = cdfModelWeibull(1.9038,3.5990,0.05)
     return fPMultiDetect(mvCNR)
     
 def detectionProbability(cnr,N):
+    """
+    
+    """
     if np.size(cnr)>1:
         p = np.zeros(cnr.shape)
         if np.size(N)==1:
