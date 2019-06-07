@@ -1,5 +1,4 @@
 % COLUMNSFMRI
-% Version 001 20-Jul-2017
 %
 % This MATLAB code supplements 
 % 

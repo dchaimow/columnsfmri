@@ -466,7 +466,8 @@ def noiseModel(V,TR,nT,differentialFlag,*args,**kwargs):
     
 def decodingProbability(cnr,nVoxels,nClasses):
     """
-    
+    calculates probability of statistically significant decoding
+    (uses Weibull CDF previously fitted to simulations)
     """
     a = 0.26
     mvCNR = cnr * nVoxels**a
@@ -482,7 +483,8 @@ def decodingProbability(cnr,nVoxels,nClasses):
 
 def decodingAccuracy(cnr,nVoxels,nClasses):
     """
-    
+    calculates decoding accuracy
+    (uses Weibull CDF previously fitted to simulations)    
     """
     a = 0.26
     mvCNR = cnr * nVoxels**a
@@ -498,7 +500,8 @@ def decodingAccuracy(cnr,nVoxels,nClasses):
 
 def detectionProbabilityMulti(cnr,nVoxels):
     """
-
+    calculates probability of statistically significant multivariate detection
+    (uses Weibull CDF previously fitted to simulations)    
     """
     a = 0.26
     mvCNR = cnr * nVoxels**a
@@ -507,8 +510,9 @@ def detectionProbabilityMulti(cnr,nVoxels):
     
 def detectionProbability(cnr,N):
     """
-    
-    """
+    calculates probability of statistically significant uni- and multivariate detection
+    (uses derived closed formulas)
+    """    
     if np.size(cnr)>1:
         p = np.zeros(cnr.shape)
         if np.size(N)==1:
@@ -524,7 +528,15 @@ def detectionProbability(cnr,N):
     return p
 
 class simulation:
+    """
+    Implementation of a simulation of cortical column patterns and their MR imaging.
+    """
     def __init__(self,N,L):
+        """
+        Initializes simulation.
+        N   simulation grid points along one dimension
+        L   simulation grid length along one dimension [mm]
+        """
         self.N = N
         self.L = L
         self.dx = L/self.N
@@ -541,17 +553,38 @@ class simulation:
         self.k1, self.k2 = np.meshgrid(self.k, self.k)
         
     def gwnoise(self):
+        """
+        Generates a complex-valued gaussian white noise pattern according to
+        simulation grid. To be used for simulating a column pattern using 
+        columnPattern.
+        """
         return np.random.randn(self.N,self.N) + 1j* np.random.randn(self.N,self.N)
     
     def ft2(self,y):
+        """
+        Numerically simulates 2D fourier transform of patterns defined on the 
+        simulation grid.
+        """
         return (self.L**2/self.N**2)*np.fft.fftshift(
             np.fft.fft2(np.fft.ifftshift(y)))
     
     def ift2(self,fy):
+        """
+        Numerically simulates inverse 2D fourier transform of patterns defined on 
+        the simulation grid.
+        """
         return (self.N**2 * self.dk**2)*np.fft.ifftshift(
             np.fft.ifft2(np.fft.fftshift(fy)))
     
     def columnPattern(self,rho,deltaRelative,gwnoise):
+        """
+        Simulates the differential neuronal response of a pattern of cortical 
+        columns by filtering of spatial Gaussian white noise gwnoise using a 
+        spatial band-pass filter parameterized by main spatial frequency rho and
+        relative irregularity delta. Returns the simulated pattern and a map of
+        preferred orientaion (if the map is interpreted as representing orientation
+        responses).
+        """
         fwhmfactor = 2*np.sqrt(2*np.log(2))
         r = np.sqrt(self.k1**2+self.k2**2)
         if deltaRelative==0:
@@ -569,6 +602,13 @@ class simulation:
         return neuronal, preferredOrientation
     
     def bold(self,fwhm,beta,y):
+        """
+        Simulates spatial BOLD response to neuronal response pattern y using a 
+        BOLD PSF with full-width at half-maximum fwhm, response amplitude beta.
+        Returns rhe resulting BOLD response pattern, the point-spread function and
+        modulation-transfer function.
+        """
+        
         if fwhm==0:
             by = beta * y
             psf = None
@@ -584,6 +624,11 @@ class simulation:
         return by,psf,MTF
     
     def mri(self,w,y):
+        """
+        Simulates MRI voxel sampling from pattern y by reducing the k-space
+        represenation according to voxel width w, which need to be a devisor 
+        of self.L.
+        """
         nSamplesHalf = self.L/(2*w)
         if nSamplesHalf % 1 == 0:
             nSamplesHalf = int(nSamplesHalf)
@@ -597,6 +642,9 @@ class simulation:
         return my
     
     def upsample(self,y):
+        """
+        Spatial frequency space zero-fill interpolation (=Fourier interpolation).
+        """
         Fy = np.fft.fft2(y)
         nx, ny = Fy.shape # size of original matrix
         nxAdd = self.N - nx # number of zeros to add
@@ -616,12 +664,23 @@ class simulation:
         return upPattern
     
     def patternCorrelation(self,orig,mri):
+        """
+        Calculates pattern correlation between original pattern orig and zero-fill
+        interpolated version of pattern mri. 
+        """
         mriUp = self.upsample(mri)
         c = np.corrcoef(orig.flatten(),mriUp.flatten())
         r = c[0,1]
         return r
         
     def plotPattern(self,y,cmap='gray',title=None, ax=None):
+        """
+        Visualizes a simulation pattern.
+        y      pattern to be visualized
+        cmap   colormap (gray by default)
+        title  title
+        ax     preexisting axis to be used for plotting
+        """
         if not(ax):
             fig, ax = plt.subplots()
         else:

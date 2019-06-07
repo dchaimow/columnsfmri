@@ -1,1 +1,1 @@
-inside MATLAB type help columnsfmri or see Contents.m
+inside MATLAB type help(pwd) or see Contents.m

@@ -10,4 +10,8 @@ This is a repository conatain a python and a MATLAB version of a toolbox based o
 
 This code allows to simulate fMRI of cortical column patterns using different pattern and measurement parameters. It quantifies measures related to possible analysis objectives and approaches, and estimates optimal voxel widths.
 
-For a demo see [Python/columnsfmri.ipynb](Python/columnsfmri.ipynb). You can also run this jupyter notebook interactively by clicking on the 'launch binder' button at the top of the page.
+For a python demo see [Python/columnsfmri.ipynb](Python/columnsfmri.ipynb). 
+You can also run this jupyter notebook interactively by clicking on the 'launch binder' button at the top of the page.
+
+For a matlab demo navigate to the MATLAB folder from inside MATLAB and
+type `showdemo columnsfmri` or get more information by typing 'help(pwd)'.
